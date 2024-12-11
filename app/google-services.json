@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "640329300346",
+    "project_id": "chalenge3-1fb01",
+    "storage_bucket": "chalenge3-1fb01.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:640329300346:android:03c5f9784b376564307ec3",
+        "android_client_info": {
+          "package_name": "com.example.appweek8_2"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBNlswG4c49PblaQWtv-O2oIw1dEtPc9Qc"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
