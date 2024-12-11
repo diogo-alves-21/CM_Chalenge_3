@@ -50,7 +50,7 @@ public class LoginFragment extends Fragment {
         viewModel.getLoginSuccess().observe(getViewLifecycleOwner(), success -> {
             if (success) {
                 Toast.makeText(getContext(), "Login realizado com sucesso!!", Toast.LENGTH_SHORT).show();
-                Log.d("UserModel", "Login successful, username: " + viewModel.getUsername().getValue());
+                Log.d("UserModel", "Login successful, username: " + viewModel.getUsername());
                 FragmentTransaction transaction = requireActivity().getSupportFragmentManager().beginTransaction();
                 transaction.replace(R.id.fragment_container, new ConversationsListFragment());
                 transaction.addToBackStack(null);

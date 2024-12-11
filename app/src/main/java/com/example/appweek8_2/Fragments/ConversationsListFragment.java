@@ -3,7 +3,10 @@ package com.example.appweek8_2.Fragments;
 import android.app.AlertDialog;
 import android.os.Bundle;
 
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
+import androidx.fragment.app.FragmentTransaction;
 import androidx.lifecycle.ViewModelProvider;
 
 import android.util.Log;
@@ -31,8 +34,7 @@ public class ConversationsListFragment extends Fragment {
     }
 
     @Override
-    public View onCreateView(LayoutInflater inflater, ViewGroup container,
-                             Bundle savedInstanceState) {
+    public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
 
         View view = inflater.inflate(R.layout.fragment_conversations_list, container, false);
 
@@ -51,9 +53,8 @@ public class ConversationsListFragment extends Fragment {
             return true;
         });
 
-        viewModel.getUsername().observe(getViewLifecycleOwner(), username -> {
-            Log.d("ConversationsListFragment", "Username updated: " + username);
-            viewModel.loadContacts(); // Load contacts when username is updated
+        listView.setOnItemClickListener((parent, view1, position, id) -> {
+            openChat(position);
         });
 
         viewModel.getContacts().observe(getViewLifecycleOwner(), users -> {
@@ -104,6 +105,14 @@ public class ConversationsListFragment extends Fragment {
                     .setNegativeButton("Cancel", (dialog, which) -> dialog.dismiss())
                     .show();
         }
+    }
+
+    public void openChat(int position){
+        viewModel.setSelectedUsername(position);
+        FragmentTransaction transaction = requireActivity().getSupportFragmentManager().beginTransaction();
+        transaction.replace(R.id.fragment_container, new ChatFragment());
+        transaction.addToBackStack(null);
+        transaction.commit();
     }
 
 }
