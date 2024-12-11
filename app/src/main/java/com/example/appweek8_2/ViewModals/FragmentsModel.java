@@ -25,6 +25,7 @@ public class FragmentsModel extends ViewModel {
     protected MutableLiveData<String> username = new MutableLiveData<>("");
     protected MutableLiveData<List<String>> messages = new MutableLiveData<>();
     protected MutableLiveData<List<String>> users = new MutableLiveData<>();
+    protected MutableLiveData<String> selectedUsername = new MutableLiveData<>();
     protected DatabaseHelper dbHelper;
 
     public FragmentsModel() {
@@ -74,7 +75,7 @@ public class FragmentsModel extends ViewModel {
 
     public void loadContacts() {
         Log.d("Username", "my username: " + username.getValue());
-        if (dbHelper != null && !getUsername().getValue().isEmpty()) {
+        if (dbHelper != null && !getUsername().isEmpty()) {
             List<String> contacts = dbHelper.getAllUsersExcept(username.getValue());
             users.setValue(contacts);
         }
@@ -99,9 +100,22 @@ public class FragmentsModel extends ViewModel {
         }
     }
 
+    public String getSelectedUsername() {
+        return selectedUsername.getValue();
+    }
 
-    public LiveData<String> getUsername() {
-        return username;
+    public void setSelectedUsername(int index) {
+        if (index == -1){
+            this.selectedUsername = new MutableLiveData<>("");
+        }
+        else {
+            this.selectedUsername.setValue(users.getValue().get(index));
+        }
+
+    }
+
+    public String getUsername() {
+        return username.getValue();
     }
 
     public void setUsername(String username) {
@@ -122,7 +136,7 @@ public class FragmentsModel extends ViewModel {
                 .addOnSuccessListener(documentSnapshot -> {
                     if (documentSnapshot.exists()) {
                         setUsername(username);
-                        Log.d("Username", "login: " + getUsername().getValue());
+                        Log.d("Username", "login: " + getUsername());
                         loginSuccess.setValue(true);
                     } else {
                         loginSuccess.setValue(false);
