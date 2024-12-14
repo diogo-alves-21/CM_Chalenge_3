@@ -11,6 +11,7 @@ import androidx.lifecycle.MutableLiveData;
 import androidx.lifecycle.ViewModel;
 
 import com.example.appweek8_2.Helpers.DatabaseHelper;
+import com.example.appweek8_2.Helpers.MqttHelper;
 import com.google.firebase.firestore.FirebaseFirestore;
 
 import java.io.Closeable;
@@ -20,6 +21,8 @@ import java.util.Map;
 
 public class FragmentsModel extends ViewModel {
 
+    private static final String TAG = "FragmentsModel";
+
     protected MutableLiveData<Boolean> loginSuccess;
     protected FirebaseFirestore firestore;
     protected MutableLiveData<String> username = new MutableLiveData<>("");
@@ -28,6 +31,9 @@ public class FragmentsModel extends ViewModel {
     protected MutableLiveData<String> selectedUsername = new MutableLiveData<>();
     protected DatabaseHelper dbHelper;
 
+    // MQTT Helper
+    private MqttHelper mqttHelper;
+
     public FragmentsModel() {
         this.loginSuccess = new MutableLiveData<>(false);
         this.firestore = FirebaseFirestore.getInstance();
@@ -35,6 +41,41 @@ public class FragmentsModel extends ViewModel {
 
     public void setDatabaseHelper(Context context) {
         dbHelper = new DatabaseHelper(context);
+    }
+
+    // Initialize MQTT helper
+    public void setMqttHelper(Context context) {
+        mqttHelper = new MqttHelper(context);
+
+        // Subscribe to a topic after connecting to the broker
+        mqttHelper.subscribeToTopic("chat/messages");
+
+        // Set up the message listener
+        mqttHelper.setMqttConnectionListener(new MqttHelper.MqttConnectionListener() {
+            @Override
+            public void onConnected() {
+                Log.d(TAG, "MQTT Connected!");
+            }
+
+            @Override
+            public void onConnectionFailed(Throwable exception) {
+                Log.e(TAG, "MQTT Connection Failed: " + exception.getMessage());
+            }
+        });
+
+        // Set up the message callback to handle incoming messages
+        mqttHelper.setMessageCallback((topic, message) -> {
+            Log.d(TAG, "Message received on topic: " + topic);
+            // You can process the message here and update the LiveData
+            addMessage(username.getValue(), new String(message.getPayload())); // Update messages
+        });
+    }
+
+    // Method to send a message
+    public void sendMessage(String topic, String message) {
+        if (mqttHelper != null) {
+            mqttHelper.publishMessage(topic, message);
+        }
     }
 
 

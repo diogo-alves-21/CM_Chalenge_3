@@ -1,5 +1,6 @@
 <LinearLayout
     xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:orientation="vertical"
@@ -26,19 +27,21 @@
                 android:layout_width="48dp"
                 android:layout_height="48dp"
                 android:src="@drawable/back"
-                android:tint="@color/white"
                 android:background="?attr/selectableItemBackground"
-                android:contentDescription="Send Back"/>
+                android:contentDescription="Send Back"
+                app:tint="@color/white" />
 
 
             <TextView
                 android:id="@+id/textContact"
-                android:layout_width="wrap_content"
+                android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
-                android:background="@android:color/transparent"
-                android:text="TextView"
-                android:textColor="@android:color/white" />
+                android:text="Nome do contato"
+                android:textSize="18sp"
+                android:textColor="@android:color/white"
+                android:gravity="center_vertical"
+                android:paddingStart="8dp" />
 
         </LinearLayout>
     </com.google.android.material.appbar.MaterialToolbar>
@@ -46,29 +49,32 @@
     <ListView
         android:id="@+id/messagesListView"
         android:layout_width="match_parent"
-        android:layout_height="0dp"
+        android:layout_height="474dp"
         android:layout_weight="1"
         android:dividerHeight="8dp" />
 
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:orientation="horizontal">
+        android:orientation="horizontal"
+        android:paddingTop="8dp">
 
         <EditText
             android:id="@+id/messageInput"
-            android:layout_width="wrap_content"
+            android:layout_width="379dp"
             android:layout_height="wrap_content"
             android:layout_weight="1"
             android:hint="Escreva uma mensagem"
-            android:minHeight="48dp" />
+            android:minHeight="48dp"
+            android:padding="8dp"
+            android:textSize="16sp" />
 
-        <ImageButton
-            android:id="@+id/sendButton"
-            android:contentDescription="Message send"
-            android:layout_width="48dp"
-            android:layout_height="48dp"
-            android:src="@drawable/send"
-            android:background="?attr/selectableItemBackground"/>
+            <ImageButton
+                android:id="@+id/sendButton"
+                android:contentDescription="Message send"
+                android:layout_width="48dp"
+                android:layout_height="48dp"
+                android:src="@drawable/send"
+                android:background="?attr/selectableItemBackground"/>
     </LinearLayout>
 </LinearLayout>
