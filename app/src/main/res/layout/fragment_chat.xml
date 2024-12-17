@@ -3,8 +3,7 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:orientation="vertical"
-    android:padding="16dp">
+    android:orientation="vertical">
 
     <com.google.android.material.appbar.MaterialToolbar
         android:id="@+id/toolbar2"
@@ -18,7 +17,6 @@
             android:layout_width="match_parent"
             android:layout_height="match_parent"
             android:gravity="center"
-            android:padding="0dp"
             android:orientation="horizontal">
 
 
@@ -28,7 +26,7 @@
                 android:layout_height="48dp"
                 android:src="@drawable/back"
                 android:background="?attr/selectableItemBackground"
-                android:contentDescription="Send Back"
+                android:contentDescription="Voltar"
                 app:tint="@color/white" />
 
 
@@ -46,22 +44,51 @@
         </LinearLayout>
     </com.google.android.material.appbar.MaterialToolbar>
 
-    <ListView
-        android:id="@+id/messagesListView"
+    <!-- ListView for Received Messages -->
+    <TextView
+        android:id="@+id/textView4"
         android:layout_width="match_parent"
-        android:layout_height="474dp"
+        android:layout_height="wrap_content"
+        android:gravity="center"
+        android:text="Recebidas" />
+
+    <ListView
+        android:id="@+id/receivedMessagesListView"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
         android:layout_weight="1"
-        android:dividerHeight="8dp" />
+        android:layout_marginBottom="8dp"
+        android:dividerHeight="8dp"
+        android:paddingEnd="64dp"
+        android:layout_gravity="start" />   <!-- Deixa espaço para alinhar mensagens à esquerda -->
+
+    <!-- ListView for Sent Messages -->
+    <TextView
+        android:id="@+id/textView5"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:gravity="center"
+        android:text="Enviadas" />
+
+    <ListView
+        android:id="@+id/sentMessagesListView"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1"
+        android:dividerHeight="8dp"
+        android:paddingStart="64dp"
+        android:layout_gravity="end" /> <!-- Deixa espaço para alinhar mensagens à direita -->
 
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="horizontal"
-        android:paddingTop="8dp">
+        android:paddingTop="8dp"
+        android:layout_marginBottom="20dp">
 
         <EditText
             android:id="@+id/messageInput"
-            android:layout_width="379dp"
+            android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_weight="1"
             android:hint="Escreva uma mensagem"

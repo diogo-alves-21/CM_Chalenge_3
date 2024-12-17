@@ -1,12 +1,12 @@
 package com.example.appweek8_2.Helpers;
 
-import android.content.Context;
 import android.util.Log;
 import org.eclipse.paho.client.mqttv3.IMqttActionListener;
 import org.eclipse.paho.client.mqttv3.IMqttDeliveryToken;
 import org.eclipse.paho.client.mqttv3.IMqttToken;
 import org.eclipse.paho.client.mqttv3.MqttAsyncClient;
 import org.eclipse.paho.client.mqttv3.MqttCallback;
+import org.eclipse.paho.client.mqttv3.MqttClient;
 import org.eclipse.paho.client.mqttv3.MqttConnectOptions;
 import org.eclipse.paho.client.mqttv3.MqttException;
 import org.eclipse.paho.client.mqttv3.MqttMessage;
@@ -16,89 +16,51 @@ public class MqttHelper {
     private static final String MQTT_BROKER = "tcp://broker.emqx.io:1883";
     private static final String CLIENT_ID = "AndroidClient_" + System.currentTimeMillis();
 
-    private MqttAsyncClient mqttClient;
-    private Context context;
+    private MqttClient mqttClient;
     private MqttConnectionListener mqttConnectionListener; // Listener para a conexão
     private MessageCallback messageCallback; // Callback para mensagens
 
-    public MqttHelper(Context context) {
-        this.context = context;
-        connectToBroker();
+    public MqttHelper(String topic) {
+        connectToBroker(topic);
     }
 
-    private void connectToBroker() {
-        try {
-            mqttClient = new MqttAsyncClient(MQTT_BROKER, CLIENT_ID, null);
+    private void connectToBroker(String topic) {
+        new Thread(new Runnable() {
+            @Override
+            public void run() {
+                try {
+                    mqttClient = new MqttClient(MQTT_BROKER, CLIENT_ID, null);
 
-            MqttConnectOptions options = new MqttConnectOptions();
-            options.setCleanSession(true);
-            options.setAutomaticReconnect(true);
+                    MqttConnectOptions options = new MqttConnectOptions();
+                    options.setCleanSession(false);
+                    //options.setAutomaticReconnect(true);
 
-            mqttClient.setCallback(new MqttCallback() {
-                @Override
-                public void connectionLost(Throwable cause) {
-                    Log.e(TAG, "Connection lost: " + cause.getMessage());
-                    if (mqttConnectionListener != null) {
-                        mqttConnectionListener.onConnectionFailed(cause);
-                    }
+                    mqttClient.connect(options);
+                    mqttClient.subscribe(topic);
+
+                    mqttClient.setCallback(new MqttCallback() {
+                        @Override
+                        public void connectionLost(Throwable cause) {
+                            Log.d(TAG, "Connection lost: " + cause.getMessage());
+                        }
+
+                        @Override
+                        public void messageArrived(String topic, MqttMessage message) {
+                            Log.d(TAG, "Message received on topic " + topic + ": " + new String(message.getPayload()));
+                            messageCallback.onMessageReceived(message);
+                        }
+
+                        @Override
+                        public void deliveryComplete(IMqttDeliveryToken token) {
+                            Log.d(TAG, "Message delivery complete");
+                        }
+                    });
+
+                } catch (MqttException e) {
+                    Log.d(TAG, "Error connecting to MQTT broker: " + e.getMessage());
                 }
-
-                @Override
-                public void messageArrived(String topic, MqttMessage message) {
-                    Log.d(TAG, "Message received on topic " + topic + ": " + new String(message.getPayload()));
-                    if (messageCallback != null) {
-                        messageCallback.onMessageReceived(topic, message);
-                    }
-                }
-
-                @Override
-                public void deliveryComplete(IMqttDeliveryToken token) {
-                    Log.d(TAG, "Message delivery complete");
-                }
-            });
-
-            mqttClient.connect(options, null, new IMqttActionListener() {
-                @Override
-                public void onSuccess(IMqttToken asyncActionToken) {
-                    Log.d(TAG, "Connected to MQTT broker");
-                    if (mqttConnectionListener != null) {
-                        mqttConnectionListener.onConnected();
-                    }
-                }
-
-                @Override
-                public void onFailure(IMqttToken asyncActionToken, Throwable exception) {
-                    Log.e(TAG, "Failed to connect to broker: " + exception.getMessage());
-                    if (mqttConnectionListener != null) {
-                        mqttConnectionListener.onConnectionFailed(exception);
-                    }
-                }
-            });
-        } catch (MqttException e) {
-            Log.e(TAG, "Error connecting to MQTT broker: " + e.getMessage());
-        }
-    }
-
-    public void subscribeToTopic(String topic) {
-        try {
-            if (mqttClient != null && mqttClient.isConnected()) {
-                mqttClient.subscribe(topic, 1, null, new IMqttActionListener() {
-                    @Override
-                    public void onSuccess(IMqttToken asyncActionToken) {
-                        Log.d(TAG, "Subscribed to topic: " + topic);
-                    }
-
-                    @Override
-                    public void onFailure(IMqttToken asyncActionToken, Throwable exception) {
-                        Log.e(TAG, "Failed to subscribe to topic: " + topic + ", error: " + exception.getMessage());
-                    }
-                });
-            } else {
-                Log.e(TAG, "Cannot subscribe, MQTT client is not connected.");
             }
-        } catch (MqttException e) {
-            Log.e(TAG, "Error subscribing to topic: " + topic + ", error: " + e.getMessage());
-        }
+        }).start();
     }
 
     public void publishMessage(String topic, String message) {
@@ -108,42 +70,22 @@ public class MqttHelper {
                 mqttMessage.setPayload(message.getBytes());
                 mqttMessage.setQos(1);
 
-                mqttClient.publish(topic, mqttMessage, null, new IMqttActionListener() {
-                    @Override
-                    public void onSuccess(IMqttToken asyncActionToken) {
-                        Log.d(TAG, "Message published to topic: " + topic);
-                    }
-
-                    @Override
-                    public void onFailure(IMqttToken asyncActionToken, Throwable exception) {
-                        Log.e(TAG, "Failed to publish message to topic: " + topic + ", error: " + exception.getMessage());
-                    }
-                });
+                mqttClient.publish(topic, mqttMessage);
             } else {
-                Log.e(TAG, "Cannot publish, MQTT client is not connected.");
+                Log.d(TAG, "Cannot publish, MQTT client is not connected.");
             }
         } catch (MqttException e) {
-            Log.e(TAG, "Error publishing message to topic: " + topic + ", error: " + e.getMessage());
+            Log.d(TAG, "Error publishing message to topic: " + topic + ", error: " + e.getMessage());
         }
     }
 
     public void disconnect() {
         try {
             if (mqttClient != null && mqttClient.isConnected()) {
-                mqttClient.disconnect(null, new IMqttActionListener() {
-                    @Override
-                    public void onSuccess(IMqttToken asyncActionToken) {
-                        Log.d(TAG, "Disconnected from MQTT broker");
-                    }
-
-                    @Override
-                    public void onFailure(IMqttToken asyncActionToken, Throwable exception) {
-                        Log.e(TAG, "Failed to disconnect from broker: " + exception.getMessage());
-                    }
-                });
+                mqttClient.disconnect();
             }
         } catch (MqttException e) {
-            Log.e(TAG, "Error disconnecting from MQTT broker: " + e.getMessage());
+            Log.d("mqtt staff", "Error disconnecting from MQTT broker: " + e.getMessage());
         }
     }
 
@@ -157,7 +99,7 @@ public class MqttHelper {
 
     // Callback interface for message reception
     public interface MessageCallback {
-        void onMessageReceived(String topic, MqttMessage message);
+        void onMessageReceived(MqttMessage message);
     }
 
     public interface MqttConnectionListener {

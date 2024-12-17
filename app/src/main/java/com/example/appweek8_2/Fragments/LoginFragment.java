@@ -48,15 +48,17 @@ public class LoginFragment extends Fragment {
         tvRegister.setOnClickListener(v -> navigateToRegister());
 
         viewModel.getLoginSuccess().observe(getViewLifecycleOwner(), success -> {
-            if (success) {
-                Toast.makeText(getContext(), "Login realizado com sucesso!!", Toast.LENGTH_SHORT).show();
-                Log.d("UserModel", "Login successful, username: " + viewModel.getUsername());
-                FragmentTransaction transaction = requireActivity().getSupportFragmentManager().beginTransaction();
-                transaction.replace(R.id.fragment_container, new ConversationsListFragment());
-                transaction.addToBackStack(null);
-                transaction.commit();
-            } else {
-                Toast.makeText(getContext(), "Este username é inválido!!", Toast.LENGTH_SHORT).show();
+            if (viewModel.isLoginAttempted()) {
+                if (success) {
+                    Toast.makeText(getContext(), "Login realizado com sucesso!!", Toast.LENGTH_SHORT).show();
+                    Log.d("UserModel", "Login successful, username: " + viewModel.getUsername());
+                    FragmentTransaction transaction = requireActivity().getSupportFragmentManager().beginTransaction();
+                    transaction.replace(R.id.fragment_container, new ConversationsListFragment());
+                    transaction.addToBackStack(null);
+                    transaction.commit();
+                } else {
+                    Toast.makeText(getContext(), "Este username é inválido!!", Toast.LENGTH_SHORT).show();
+                }
             }
         });
 

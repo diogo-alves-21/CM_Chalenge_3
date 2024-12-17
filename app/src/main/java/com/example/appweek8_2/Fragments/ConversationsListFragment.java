@@ -7,6 +7,7 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
 import androidx.fragment.app.FragmentTransaction;
+import androidx.lifecycle.LiveData;
 import androidx.lifecycle.ViewModelProvider;
 
 import android.util.Log;
@@ -22,12 +23,15 @@ import android.widget.Toast;
 import com.example.appweek8_2.R;
 import com.example.appweek8_2.ViewModals.FragmentsModel;
 
+import java.util.List;
+
 public class ConversationsListFragment extends Fragment {
 
     private FragmentsModel viewModel;
     private ArrayAdapter<String> usersAdapter;
     private ListView listView;
-    private Button adduser;
+    private Button addconversation;
+    private Button buttonArduino;
 
     public static ConversationsListFragment newInstance() {
         return new ConversationsListFragment();
@@ -42,11 +46,14 @@ public class ConversationsListFragment extends Fragment {
         viewModel.setDatabaseHelper(requireContext());
 
         listView = view.findViewById(R.id.listView);
-        adduser = view.findViewById(R.id.buttonAdd);
+        addconversation = view.findViewById(R.id.buttonAdd);
+        buttonArduino = view.findViewById(R.id.buttonArduino);
 
-        adduser.setOnClickListener(v -> createConversation());
+        addconversation.setOnClickListener(v -> createConversation());
 
-        viewModel.loadContacts();
+        buttonArduino.setOnClickListener(v -> openArduinoFragment());
+
+        viewModel.loadConversations();
 
         listView.setOnItemLongClickListener((parent, view1, position, id) -> {
             deleteConversation(position);
@@ -57,17 +64,19 @@ public class ConversationsListFragment extends Fragment {
             openChat(position);
         });
 
-        viewModel.getContacts().observe(getViewLifecycleOwner(), users -> {
-            if (users != null) {
-                Log.d("ConversationsListFragment", "Users updated: " + users);
+        viewModel.getConversations().observe(getViewLifecycleOwner(), conversationsList -> {
+            if (conversationsList != null) {
+                Log.d("ConversationsListFragment", "Users updated: " + conversationsList);
                 if (usersAdapter == null) {
-                    usersAdapter = new ArrayAdapter<>(requireContext(), android.R.layout.simple_list_item_1, users);
+                    usersAdapter = new ArrayAdapter<>(requireContext(), android.R.layout.simple_list_item_1, conversationsList);
                     listView.setAdapter(usersAdapter);
                 } else {
                     usersAdapter.clear();
-                    usersAdapter.addAll(users);
+                    usersAdapter.addAll(conversationsList);
                     usersAdapter.notifyDataSetChanged();
                 }
+            } else {
+                Log.d("ConversationsListFragment", "Conversations list is null");
             }
         });
 
@@ -75,17 +84,34 @@ public class ConversationsListFragment extends Fragment {
     }
 
     public void createConversation() {
-        EditText user = new EditText(getContext());
+        EditText user_2 = new EditText(getContext());
         AlertDialog.Builder builder = new AlertDialog.Builder(getContext());
         builder.setTitle("Adicionar Conversa")
-                .setView(user)
+                .setView(user_2)
                 .setPositiveButton("Adicionar", (dialog, which) -> {
-                    String newUser = user.getText().toString().trim();
-                    if (!newUser.isEmpty()) {
-                        viewModel.addUser(newUser);
-                        Toast.makeText(getContext(), "Título da nota atualizado", Toast.LENGTH_SHORT).show();
+                    String username = user_2.getText().toString().trim();
+
+                    // Verificar se o nome do usuário não está vazio
+                    if (!username.isEmpty()) {
+                        // Adicionar o usuário apenas se o nome não for vazio
+
+                        if (viewModel.getUserId(viewModel.getUsername())==-1){
+                            viewModel.addUser(viewModel.getUsername());
+                        }
+
+                        if (viewModel.getUserId(username)==-1){
+                            viewModel.addUser(username);
+
+                            int newUser = viewModel.getUserId(username);
+                            int currentUser = viewModel.getUserId(viewModel.getUsername());
+                            viewModel.createConversation(currentUser, newUser);
+                            
+                            Toast.makeText(getContext(), "Conversa criada", Toast.LENGTH_SHORT).show();
+                        } else {
+                            Toast.makeText(getContext(), "Conversa já existe", Toast.LENGTH_SHORT).show();
+                        }
                     } else {
-                        Toast.makeText(getContext(), "Título da nota não pode ser vazio", Toast.LENGTH_SHORT).show();
+                        Toast.makeText(getContext(), "O nome do usuário não pode ser vazio", Toast.LENGTH_SHORT).show();
                     }
                 })
                 .setNegativeButton("Cancelar", (dialog, which) -> dialog.dismiss())
@@ -93,13 +119,16 @@ public class ConversationsListFragment extends Fragment {
     }
 
     public void deleteConversation(int position) {
-        String userToDelete = usersAdapter.getItem(position);
-        if (userToDelete != null) {
+        viewModel.setSelectedUsername(usersAdapter.getItem(position));
+
+        int conversationToDelete = viewModel.getConversationId(viewModel.getUserId(viewModel.getUsername()), viewModel.getUserId(usersAdapter.getItem(position)));
+
+        if (conversationToDelete != -1) {
             new AlertDialog.Builder(getContext())
                     .setTitle("Apagar Conversa")
-                    .setMessage("Têm a certeza que deseja apagar as conversas com " + userToDelete + "?")
+                    .setMessage("Têm a certeza que deseja apagar as mensagens da conversa " + viewModel.getSelectedUsername() + "?")
                     .setPositiveButton("Apagar", (dialog, which) -> {
-                        viewModel.deleteUser(userToDelete);
+                        viewModel.deleteConversation(conversationToDelete, viewModel.getUserId(viewModel.getSelectedUsername()));
                         Toast.makeText(getContext(), "Conversation deleted", Toast.LENGTH_SHORT).show();
                     })
                     .setNegativeButton("Cancel", (dialog, which) -> dialog.dismiss())
@@ -108,9 +137,18 @@ public class ConversationsListFragment extends Fragment {
     }
 
     public void openChat(int position){
-        viewModel.setSelectedUsername(position);
+        viewModel.setSelectedUsername(usersAdapter.getItem(position));
         FragmentTransaction transaction = requireActivity().getSupportFragmentManager().beginTransaction();
+        Log.d("SelectUser","aaaa: "+ viewModel.getSelectedUsername());
         transaction.replace(R.id.fragment_container, new ChatFragment());
+        transaction.addToBackStack(null);
+        transaction.commit();
+    }
+
+    // Método para abrir o ArduinoFragment
+    private void openArduinoFragment() {
+        FragmentTransaction transaction = requireActivity().getSupportFragmentManager().beginTransaction();
+        transaction.replace(R.id.fragment_container, new ArduinoFragment());
         transaction.addToBackStack(null);
         transaction.commit();
     }
